@@ -1,6 +1,11 @@
 /* ============================================================
    Hadamard's Hoard — stylesheet
-   Dark "quantum lab" theme. Color convention: --quantum-* (red) is the
+   Dark "quantum lab" theme by default, with a light theme (the palette
+   shared with Qubit Survival Quest) selected by <html data-theme="light">
+   — see the second :root block below. Every color the page uses goes
+   through a variable, so switching themes only re-points those variables;
+   nothing else in this file needs to know which theme is active.
+   Color convention: --quantum-* (red) is the
    player's own color, --classical-* (blue) is the opponent's — used
    consistently for panel accents, status chips, event colors, and the
    State Simulator's probability gradient. See app.js's EVENT_COLORS for
@@ -33,9 +38,115 @@
   --danger: #e0637a;
   --ok: #f2c94c; /* alias of --gem, kept separate in case "success" and "gem" ever need to diverge */
   --qec: #6fe6a0; /* light green — QEC's own color, distinct from Extra RAM's light blue */
+
+  /* rgb triplets of the accents above, so glows can be written as
+     rgba(var(--gem-rgb), 0.4) and still follow the theme. */
+  --gem-rgb: 242,201,76;
+  --quantum-rgb: 150,23,46;
+  --quantum-bright-rgb: 226,138,151;
+  --danger-rgb: 224,99,122;
+  --classical-rgb: 0,93,126;
+  --qec-rgb: 111,230,160;
+
+  /* Corner glows on the page background (quantum top-left, classical top-right). */
+  --glow-quantum: rgba(150,23,46,0.12);
+  --glow-classical: rgba(0,93,126,0.10);
+
+  /* Text colors that sit on top of accent-colored fills. */
+  --on-accent: #fdf1f2;   /* on active pills / switch knobs (same in both themes) */
+  --on-primary: #04141c;  /* on the red-to-pink primary button and the result-button hovers */
+  --on-wash: #04141c;     /* default text on the pale probability-gradient tiles */
+
+  /* Tinted panel fills that only make sense per theme. */
+  --loss-a: #241318;            /* blocked-tile hatch, dark stripe */
+  --loss-b: #2c1a20;            /* blocked-tile hatch, light stripe */
+  --classical-panel-a: #0f2530; /* opponent card back, gradient start */
+  --classical-panel-b: #0a161d; /* opponent card back, gradient end */
+  --gem-panel-a: #4a3a10;       /* found-gem card, centre */
+  --gem-panel-b: #241a0c;       /* found-gem card, edge */
+
+  /* Text colors for the tinted status chips and role tags. In dark these are
+     simply the accents; in light the accents alone don't reach AA contrast on
+     their own translucent tint, so the light block gives them deeper variants. */
+  --gem-text: var(--gem);
+  --qec-text: var(--qec);
+  --classical-text: var(--classical-bright);
+  --danger-text: var(--danger);
+  --quantum-tag-text: var(--quantum-bright);
+  --classical-tag-text: var(--classical-bright);
+
   --radius: 10px;
   font-size: 16px;
 }
+
+:root{ color-scheme: dark; }
+
+/* Light theme: the Superposition and Measurement Lab's palette, shared with
+   Qubit Survival Quest. Same color roles as dark; accents deepened so they
+   keep their contrast on a light page. */
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg: #faf8f3;
+  --bg-panel: #ffffff;
+  --bg-panel-raised: #ffffff;
+  --hairline: #ded6c4;
+  --ink: #201d1a;
+  --ink-dim: #5b564e;
+
+  --quantum: #9c1c33;
+  --quantum-deep: #711526;
+  --quantum-bright: #c2475c;
+  --quantum-wash: #fbe9ec;
+
+  --classical: #005D7E;
+  --classical-deep: #003a4f;
+  --classical-bright: #1d6f93;
+
+  --gem: #a87406;
+  --ok: #a87406;
+  --danger: #b23b3b;
+  --qec: #1f8a50;
+
+  --gem-rgb: 168,116,6;
+  --quantum-rgb: 156,28,51;
+  --quantum-bright-rgb: 194,71,92;
+  --danger-rgb: 178,59,59;
+  --classical-rgb: 0,93,126;
+  --qec-rgb: 31,138,80;
+
+  --glow-quantum: rgba(156,28,51,0.05);
+  --glow-classical: rgba(0,93,126,0.06);
+
+  --on-primary: #ffffff;
+  --loss-a: #f5d4d9;
+  --loss-b: #fbe6e9;
+  --classical-panel-a: #e3f0f6;
+  --classical-panel-b: #d5e8f0;
+  --gem-panel-a: #f1e2b0;
+  --gem-panel-b: #fbf3dc;
+
+  --gem-text: #7a5400;
+  --qec-text: #176b3d;
+  --classical-text: var(--classical);
+  --danger-text: #962f2f;
+  --quantum-tag-text: var(--quantum-deep);
+  --classical-tag-text: var(--classical-deep);
+}
+
+/* Each theme shows the logo made for its background: white wordmark in dark
+   mode, full-colour in light mode. Keep the .logo-link prefix: without it
+   these rules tie in specificity with .setup-logo / .header-logo's own
+   display:block, the later rule wins, and BOTH logos show at once. */
+.logo-link .logo-for-light{ display: none; }
+:root[data-theme="light"] .logo-link .logo-for-dark{ display: none; }
+:root[data-theme="light"] .logo-link .logo-for-light{ display: block; }
+
+/* Header sun/moon switch */
+.theme-row{ display: flex; align-items: center; gap: 6px; margin-left: auto; margin-right: 6px; }
+.theme-icon{ font-size: 15px; color: var(--ink-dim); line-height: 1; }
+/* The mute button normally carries the auto margin that pushes the right-hand
+   cluster over; with the theme switch in front, it takes over that job. */
+.theme-row + .icon-btn{ margin-left: 0; }
 
 *{ box-sizing: border-box; }
 
@@ -51,8 +162,8 @@ body{
   /* Faint glow in each player's corner, matching their panel position
      (quantum panel is top-left, classical panel is top-right). */
   background-image:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(150,23,46,0.12), transparent 60%),
-    radial-gradient(ellipse 900px 500px at 90% 10%, rgba(0,93,126,0.10), transparent 60%);
+    radial-gradient(ellipse 900px 500px at 15% -10%, var(--glow-quantum), transparent 60%),
+    radial-gradient(ellipse 900px 500px at 90% 10%, var(--glow-classical), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -191,7 +302,7 @@ h1{
 .pill.active{
   background: linear-gradient(135deg, var(--quantum-deep), var(--quantum));
   border-color: var(--quantum-bright);
-  color: #fdf1f2;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
@@ -212,7 +323,7 @@ h1{
   transition: all .15s ease;
 }
 .switch.active{ background: linear-gradient(135deg, var(--quantum-deep), var(--quantum)); border-color: var(--quantum-bright); }
-.switch.active .knob{ left: 22px; background:#fdf1f2; }
+.switch.active .knob{ left: 22px; background: var(--on-accent); }
 
 .primary-btn{
   width:100%;
@@ -220,14 +331,14 @@ h1{
   border-radius: 10px;
   border: none;
   background: linear-gradient(135deg, var(--quantum), var(--quantum-bright));
-  color: #04141c;
+  color: var(--on-primary);
   font-family:'Barlow Condensed', sans-serif;
   font-weight: 700;
   font-size: 16px;
   cursor:pointer;
   transition: transform .1s ease, box-shadow .15s ease;
 }
-.primary-btn:hover{ box-shadow: 0 0 0 3px rgba(226,138,151,0.3); }
+.primary-btn:hover{ box-shadow: 0 0 0 3px rgba(var(--quantum-bright-rgb), 0.3); }
 .primary-btn:active{ transform: scale(0.99); }
 
 .rules-disclosure{
@@ -299,9 +410,9 @@ h1{
   color: #ffffff;
 }
 .ghost-btn.result-btn-win{ background: var(--quantum); }
-.ghost-btn.result-btn-win:hover{ background: var(--quantum-bright); color: #04141c; border-color: transparent; }
+.ghost-btn.result-btn-win:hover{ background: var(--quantum-bright); color: var(--on-primary); border-color: transparent; }
 .ghost-btn.result-btn-lose{ background: var(--classical); }
-.ghost-btn.result-btn-lose:hover{ background: var(--classical-bright); color: #04141c; border-color: transparent; }
+.ghost-btn.result-btn-lose:hover{ background: var(--classical-bright); color: var(--on-primary); border-color: transparent; }
 
 /* ===================== QUADRANT LAYOUT ===================== */
 
@@ -343,12 +454,12 @@ h1{
   font-size: 10.5px; text-transform:uppercase; letter-spacing:.06em;
   padding: 3px 8px; border-radius: 5px;
 }
-.quantum-tag{ background: rgba(150,23,46,0.25); color: var(--quantum-bright); }
-.classical-tag{ background: rgba(0,93,126,0.22); color: var(--classical-bright); }
+.quantum-tag{ background: rgba(var(--quantum-rgb), 0.25); color: var(--quantum-tag-text); }
+.classical-tag{ background: rgba(var(--classical-rgb), 0.22); color: var(--classical-tag-text); }
 
 .gem-tally{ display:flex; gap:5px; font-size:20px; }
 .gem-slot{ opacity:0.25; }
-.gem-slot.filled{ opacity:1; filter: drop-shadow(0 0 4px rgba(242,201,76,0.7)); }
+.gem-slot.filled{ opacity:1; filter: drop-shadow(0 0 4px rgba(var(--gem-rgb), 0.7)); }
 
 .turn-readout{
   font-family: Verdana, Geneva, sans-serif;
@@ -374,10 +485,10 @@ h1{
   width: fit-content;
   visibility: hidden; /* toggled to visible in JS — layout space is always reserved */
 }
-.qec-shield{ background: rgba(111,230,160,0.16); color: var(--qec); border:1px solid var(--qec); }
-.ram-indicator{ background: rgba(0,93,126,0.16); color: var(--classical-bright); border:1px solid var(--classical); }
-.cosmic-indicator{ background: rgba(242,201,76,0.16); color: var(--gem); border:1px solid var(--gem); }
-.decoherence-indicator{ background: rgba(224,99,122,0.16); color: var(--danger); border:1px solid var(--danger); }
+.qec-shield{ background: rgba(var(--qec-rgb), 0.16); color: var(--qec-text); border:1px solid var(--qec); }
+.ram-indicator{ background: rgba(var(--classical-rgb), 0.16); color: var(--classical-text); border:1px solid var(--classical); }
+.cosmic-indicator{ background: rgba(var(--gem-rgb), 0.16); color: var(--gem-text); border:1px solid var(--gem); }
+.decoherence-indicator{ background: rgba(var(--danger-rgb), 0.16); color: var(--danger-text); border:1px solid var(--danger); }
 
 /* ---------- Quantum STATE SIMULATOR mode ---------- */
 .quantum-state{
@@ -401,7 +512,7 @@ h1{
   font-family:Verdana, Geneva, sans-serif;
   font-weight: 700;
   font-size: 30px;
-  color: #04141c;
+  color: var(--on-wash);
 }
 .state-iteration{
   font-family:Verdana, Geneva, sans-serif;
@@ -488,7 +599,7 @@ h1{
   font-weight:600; font-size: 13.5px;
   border: 1.5px solid var(--hairline);
   background: var(--quantum-wash);
-  color: #04141c;
+  color: var(--on-wash);
 }
 .q-tile.final{
   background: var(--quantum);
@@ -496,16 +607,16 @@ h1{
 .q-tile.final svg{ width: 30px; height: 30px; }
 .q-tile.current{
   border: 2.5px solid var(--gem);
-  box-shadow: 0 0 0 3px rgba(242,201,76,0.28), 0 0 16px rgba(242,201,76,0.55);
+  box-shadow: 0 0 0 3px rgba(var(--gem-rgb), 0.28), 0 0 16px rgba(var(--gem-rgb), 0.55);
 }
 .q-tile.current::before{
   content:"▼";
   position:absolute; top:-19px; left:50%; transform:translateX(-50%);
   color: var(--quantum-bright); font-size: 16px;
-  filter: drop-shadow(0 0 4px rgba(226,138,151,0.8));
+  filter: drop-shadow(0 0 4px rgba(var(--quantum-bright-rgb), 0.8));
 }
 .q-tile.blocked{
-  background: repeating-linear-gradient(45deg, #241318, #241318 6px, #2c1a20 6px, #2c1a20 12px);
+  background: repeating-linear-gradient(45deg, var(--loss-a), var(--loss-a) 6px, var(--loss-b) 6px, var(--loss-b) 12px);
   border-color: var(--danger);
   color: var(--danger);
   overflow: hidden;
@@ -535,8 +646,8 @@ h1{
 .measure-btn:hover:not(:disabled){ border-color: var(--gem); }
 .measure-btn.forced{
   border-color: var(--gem);
-  background: rgba(242,201,76,0.14);
-  box-shadow: 0 0 0 2px rgba(242,201,76,0.25);
+  background: rgba(var(--gem-rgb), 0.14);
+  box-shadow: 0 0 0 2px rgba(var(--gem-rgb), 0.25);
 }
 
 .measure-group{
@@ -561,13 +672,13 @@ h1{
 .measure-box-inner.success{
   border: 2px solid var(--gem);
   border-style: solid;
-  background: radial-gradient(circle, rgba(242,201,76,0.25), var(--bg-panel-raised));
-  box-shadow: 0 0 14px rgba(242,201,76,0.5);
+  background: radial-gradient(circle, rgba(var(--gem-rgb), 0.25), var(--bg-panel-raised));
+  box-shadow: 0 0 14px rgba(var(--gem-rgb), 0.5);
 }
 .measure-box-inner.fail{
   border: 2px solid var(--danger);
   border-style: solid;
-  background: radial-gradient(circle, rgba(224,99,122,0.25), var(--bg-panel-raised));
+  background: radial-gradient(circle, rgba(var(--danger-rgb), 0.25), var(--bg-panel-raised));
 }
 .measure-icon{ font-size: 22px; color: var(--ink-dim); line-height:1; }
 .measure-box-inner.success .measure-icon,
@@ -597,7 +708,7 @@ h1{
   border-radius: 5px;
   display:flex; align-items:center; justify-content:center;
   border: 1.5px solid var(--classical-deep);
-  background: linear-gradient(135deg, #0f2530, #0a161d);
+  background: linear-gradient(135deg, var(--classical-panel-a), var(--classical-panel-b));
   font-size: 13px;
 }
 .classical-deck[data-size="100"] .c-card-face{ font-size: 9px; border-width:1px; }
@@ -610,11 +721,11 @@ h1{
   to{ transform: rotateY(0deg); }
 }
 
-.c-card-face.blank-face{ background:#171c27; border-color: var(--hairline); opacity:0.4; }
+.c-card-face.blank-face{ background: var(--bg-panel-raised); border-color: var(--hairline); opacity:0.4; }
 .c-card-face.gem-face{
-  background: radial-gradient(circle, #4a3a10, #241a0c);
+  background: radial-gradient(circle, var(--gem-panel-a), var(--gem-panel-b));
   border-color: var(--gem);
-  box-shadow: 0 0 10px rgba(242,201,76,0.5);
+  box-shadow: 0 0 10px rgba(var(--gem-rgb), 0.5);
 }
 .c-card-face.gem-face svg{ width: 55%; height: 55%; }
 .c-card-face.fail-face svg{ width: 55%; height: 55%; }
@@ -639,6 +750,13 @@ h1{
 .header-log-entry{
   font-size: 13px;
   color: var(--ink-dim);
+  /* inline-block is what makes max-width/overflow/ellipsis actually apply
+     (they are ignored on a plain inline <span>); vertical-align keeps its
+     text lined up with the neighboring meta labels. Without this the long
+     event lines never truncated, and with the theme switch now sharing
+     the header they pushed "New game" onto a second row at ~1280px. */
+  display: inline-block;
+  vertical-align: bottom;
   max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -690,9 +808,9 @@ h1{
   font-weight: 800;
   letter-spacing: 0.02em;
 }
-.event-card.win{ border-color: var(--gem); box-shadow: 0 0 0 3px rgba(242,201,76,0.18); }
+.event-card.win{ border-color: var(--gem); box-shadow: 0 0 0 3px rgba(var(--gem-rgb), 0.18); }
 .event-card.win .game-over-title{ color: var(--gem); }
-.event-card.lose{ border-color: var(--danger); box-shadow: 0 0 0 3px rgba(224,99,122,0.18); }
+.event-card.lose{ border-color: var(--danger); box-shadow: 0 0 0 3px rgba(var(--danger-rgb), 0.18); }
 .event-card.lose .game-over-title{ color: var(--danger); }
 .event-card .game-over-btn{
   margin-top: 12px;

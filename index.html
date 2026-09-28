@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,8 @@
   <section id="setup-screen" class="screen active">
     <div class="setup-card">
       <a class="logo-link" href="https://uwaterloo.ca/institute-for-quantum-computing/outreach" target="_blank" rel="noopener">
-        <img class="setup-logo" src="UW_IQC_logo_reverse.png" alt="University of Waterloo — Institute for Quantum Computing">
+        <img class="setup-logo logo-for-dark" src="UW_IQC_logo_reverse.png" alt="University of Waterloo — Institute for Quantum Computing">
+        <img class="setup-logo logo-for-light" src="UW_IQC_logo.png" alt="University of Waterloo — Institute for Quantum Computing">
       </a>
       <div class="eyebrow">Institute for Quantum Computing · Outreach</div>
       <h1>Hadamard's&nbsp;Hoard</h1>
@@ -97,6 +98,18 @@
           </div>
         </div>
 
+        <!-- Light/dark theme. Purely visual and flippable at any time; the
+             header has a twin switch (#theme-toggle-header) that stays in
+             sync via setTheme() in app.js. "On" means dark. -->
+        <div class="setup-field">
+          <label>Theme</label>
+          <div class="toggle-row">
+            <span class="toggle-off-label">Light</span>
+            <button type="button" class="switch active" id="theme-toggle" role="switch" aria-checked="true" aria-label="Dark theme"><span class="knob"></span></button>
+            <span class="toggle-on-label">Dark</span>
+          </div>
+        </div>
+
         <div class="setup-field setup-field-wide">
           <label>Game mode</label>
           <div class="pill-group" id="game-mode-group">
@@ -148,7 +161,8 @@
 
     <header class="game-header">
       <a class="logo-link" href="https://uwaterloo.ca/institute-for-quantum-computing/outreach" target="_blank" rel="noopener">
-        <img class="header-logo" src="UW_IQC_logo_reverse.png" alt="University of Waterloo — Institute for Quantum Computing">
+        <img class="header-logo logo-for-dark" src="UW_IQC_logo_reverse.png" alt="University of Waterloo — Institute for Quantum Computing">
+        <img class="header-logo logo-for-light" src="UW_IQC_logo.png" alt="University of Waterloo — Institute for Quantum Computing">
       </a>
       <div class="game-title">Hadamard's Hoard</div>
       <div class="game-meta">
@@ -159,6 +173,11 @@
         <span id="game-mode-label" class="game-mode-label">Normal</span>
         <span class="meta-dot" id="header-log-dot" style="display:none;">·</span>
         <span id="header-log-entry" class="header-log-entry"></span>
+      </div>
+      <div class="theme-row" title="Light / dark theme">
+        <span class="theme-icon" aria-hidden="true">☀</span>
+        <button type="button" class="switch active" id="theme-toggle-header" role="switch" aria-checked="true" aria-label="Dark theme"><span class="knob"></span></button>
+        <span class="theme-icon" aria-hidden="true">☾</span>
       </div>
       <button id="mute-btn" class="icon-btn" aria-label="Mute sound" title="Mute sound">🔊</button>
       <button id="new-game-btn" class="ghost-btn">New game</button>
@@ -209,12 +228,12 @@
 
                 <!-- |X⟩ ket label: bracket text + a small inline X icon + closing bracket -->
                 <text class="plot-label" x="96" y="6">|</text>
-                <svg x="100" y="-8" width="17" height="17" viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="20" stroke="#8b93a7" stroke-width="4.5" stroke-linecap="round"/><line x1="20" y1="4" x2="4" y2="20" stroke="#8b93a7" stroke-width="4.5" stroke-linecap="round"/></svg>
+                <svg x="100" y="-8" width="17" height="17" viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="20" style="stroke:var(--ink-dim)" stroke-width="4.5" stroke-linecap="round"/><line x1="20" y1="4" x2="4" y2="20" style="stroke:var(--ink-dim)" stroke-width="4.5" stroke-linecap="round"/></svg>
                 <text class="plot-label" x="120" y="6">⟩</text>
 
                 <!-- |GEM⟩ ket label, same bracket+icon+bracket construction -->
                 <text class="plot-label" x="-10" y="-98">|</text>
-                <svg x="-2" y="-112" width="17" height="17" viewBox="0 0 24 24"><polygon points="12,2 22,9 12,22 2,9" fill="#f2c94c"/></svg>
+                <svg x="-2" y="-112" width="17" height="17" viewBox="0 0 24 24"><polygon points="12,2 22,9 12,22 2,9" style="fill:var(--gem)"/></svg>
                 <text class="plot-label" x="10" y="-98">⟩</text>
 
                 <!-- Fixed reference line at angle theta — the initial

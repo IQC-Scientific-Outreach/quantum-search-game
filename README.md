@@ -41,7 +41,49 @@ This is a static site — no build step, no dependencies.
 | Decoherence model | Fixed / Variable | Variable (State Simulator only) |
 | Show probabilities | On/Off | On |
 | Sound | On/Off | On |
+| Theme | Light / Dark | Dark |
 | Game mode | No events / Normal / Hard | Normal |
+
+## Light / dark theme
+
+Dark is the default; a **Theme** switch on the setup screen (next to Sound)
+and a ☀/☾ switch in the game header flip between the two at any time,
+including mid-game, and stay in sync with each other. It is purely visual
+and nothing is saved — a reload returns to dark.
+
+How it works (all in the existing three files, no extra dependencies):
+
+- `style.css`: the dark palette lives in the first `:root` block, and a
+  second `:root[data-theme="light"]` block overrides the same variables with
+  the light palette (the one shared with Qubit Survival Quest). Every color
+  the page uses is a variable — including the translucent glows, which are
+  written as `rgba(var(--gem-rgb), 0.4)` using rgb-triplet variables so they
+  follow the theme too.
+- `app.js`: `setTheme()` sets `document.documentElement.dataset.theme` and
+  syncs both switches. Colors that JavaScript used to hardcode now go through
+  CSS as well: the probability gradient on tiles is a CSS `color-mix()` over
+  the theme variables (so tiles already on screen re-color themselves when
+  the theme flips), and the gem/X icons take `var(--gem)` etc. via inline
+  style.
+- Logos: each theme shows the logo made for its background — the white-
+  wordmark `UW_IQC_logo_reverse.png` in dark, the full-colour
+  `UW_IQC_logo.png` in light. Both `<img>`s are in the page and CSS hides
+  one; the `.logo-link` prefix on those rules matters (see the comment in
+  `style.css`) — without it both logos show at once.
+- Text on tinted chips and tags (the four status chips, the Quantum/Classical
+  role tags) uses dedicated `--*-text` variables. In dark they equal the
+  accent color exactly; in light they're deeper, because the accent alone
+  fell below 4.5:1 contrast on its own translucent tint.
+
+Verified in a headless browser: exactly one logo visible per theme per
+screen; dark mode pixel-identical to before the change (apart from the new
+switches); light mode screenshotted in every state (setup, both board
+styles, every event card, measure-box states, both plot reflections and
+collapses, win and loss); and a rendered-pixel contrast audit of all
+visible text. Known, deliberate leftovers in light mode: disabled buttons and
+empty gem slots are dimmed on purpose (same as dark), and the gold/green
+event names in the log on white measure ~3.8–4.1:1 because that is what the
+specified `--gem` / `--qec` light values give on white.
 
 ## Board style: Board Game vs. State Simulator
 
@@ -431,7 +473,7 @@ a consistent "discrete tile, no overshoot" board for every size:
 
 - `index.html` — setup screen, game screen (four-quadrant layout with
   the in-quadrant win/lose result display).
-- `style.css` — visual design (dark lab theme; red `#96172E` for the
+- `style.css` — visual design (dark lab theme plus a light theme; red `#96172E` for the
   quantum panel, blue `#005D7E` for the classical/opponent panel;
   Barlow Condensed for headings/UI chrome, Verdana for compact data
   displays, Georgia for prose — the three free University of Waterloo
@@ -442,6 +484,8 @@ a consistent "discrete tile, no overshoot" board for every size:
   (oscillators + a filtered noise burst) — no binary audio files to host.
   Call `SFX.init()` from a user-gesture handler before any other sound; the
   "Begin search" button already does this.
+- `UW_IQC_logo.png` — the full-colour crest + wordmark lockup, cropped to its
+  content (1874×285), shown instead of the reverse logo in light theme.
 - `UW_IQC_logo_reverse.png` — the full crest + wordmark lockup, shown on
   the setup screen and in the game header. Cropped from the university's
   "black reverse" lockup file down to its actual content bounding box (the

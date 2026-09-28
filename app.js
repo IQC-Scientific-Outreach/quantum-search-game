@@ -7,17 +7,20 @@
 /* ---------- Small SVG icon helpers (used instead of emoji so
    colors are exact and consistent across platforms) ---------- */
 
-// Gem icon (yellow diamond) used for successful measurements, found-card
-// faces, and the |GEM⟩ axis label — kept as SVG rather than emoji so the
-// exact color is guaranteed across platforms/OSes.
+// Gem icon (diamond) used for successful measurements, found-card faces,
+// and the final tile — kept as SVG rather than emoji so the exact color is
+// guaranteed across platforms/OSes. `fill` is any CSS color, normally a
+// theme variable such as 'var(--gem)'; it goes through an inline style
+// (not a fill="" attribute) so var() resolves and the icon follows the
+// light/dark theme.
 function svgDiamond(fill, size){
   size = size || 26;
-  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}"><polygon points="12,2 22,9 12,22 2,9" fill="${fill}"/></svg>`;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}"><polygon points="12,2 22,9 12,22 2,9" style="fill:${fill}"/></svg>`;
 }
 // Failure "X" icon, same rationale as svgDiamond above.
 function svgX(color, size){
   size = size || 30;
-  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}"><line x1="4" y1="4" x2="20" y2="20" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/><line x1="20" y1="4" x2="4" y2="20" stroke="${color}" stroke-width="4.5" stroke-linecap="round"/></svg>`;
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}"><line x1="4" y1="4" x2="20" y2="20" style="stroke:${color}" stroke-width="4.5" stroke-linecap="round"/><line x1="20" y1="4" x2="4" y2="20" style="stroke:${color}" stroke-width="4.5" stroke-linecap="round"/></svg>`;
 }
 
 /* ---------- Board math ---------- */
@@ -721,27 +724,20 @@ function renderGems(){
     Array.from({length: target}).map((_,i)=>`<span class="gem-slot ${i<c.points?'filled':''}">💎</span>`).join('');
 }
 
-function hexToRgb(hex){
-  const h = hex.replace('#','');
-  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
-}
-// Linear interpolation between two hex colors at t∈[0,1] — used to build
-// the washed-out-to-solid probability gradient below.
-function mixColor(hexA, hexB, t){
-  const a = hexToRgb(hexA), b = hexToRgb(hexB);
-  const r = Math.round(a[0] + (b[0]-a[0])*t);
-  const g = Math.round(a[1] + (b[1]-a[1])*t);
-  const bl = Math.round(a[2] + (b[2]-a[2])*t);
-  return `rgb(${r},${g},${bl})`;
-}
+// Washed-out pink at low probability -> solid quantum red at high
+// probability. Returned as a CSS color-mix() over the theme variables
+// rather than a precomputed rgb(), so tiles that are already on screen
+// re-color themselves when the theme flips, with no re-render needed.
 function probToColor(p){
-  // washed-out red/white at low probability -> pure quantum red at high probability
-  return mixColor('#fbe9ec', '#96172E', Math.min(p, 1));
+  const pct = (Math.min(Math.max(p, 0), 1) * 100).toFixed(2);
+  return `color-mix(in srgb, var(--quantum) ${pct}%, var(--quantum-wash))`;
 }
 // Picks readable text color (light or dark) depending on how saturated
-// the probability-gradient background is at that point.
+// the probability-gradient background is at that point. The gradient's
+// endpoints are nearly identical in both themes, so the same two colors
+// work for both.
 function textColorFor(p){
-  return p > 0.55 ? '#fdf1f2' : '#04141c';
+  return p > 0.55 ? 'var(--on-accent)' : 'var(--on-wash)';
 }
 
 // Draws the Board Game tile row: current position (arrow + glow),
@@ -762,7 +758,7 @@ function renderQuantumBoard(){
     if(idx > q.maxReachable){
       // blocked styling (from CSS) takes over; leave blank
     } else if(tile.final){
-      div.innerHTML = svgDiamond('#0b0e14', 30);
+      div.innerHTML = svgDiamond('var(--bg)', 30);
     } else {
       div.style.background = probToColor(tile.p);
       div.style.color = textColorFor(tile.p);
@@ -909,7 +905,7 @@ function renderPlotCollapse(success){
   const targetSvgAngle = nearestEquivalentDeg(success ? -90 : 0);
   document.getElementById('plot-vector-group').setAttribute('transform', `rotate(${targetSvgAngle}) scale(1)`);
   const tip = document.getElementById('plot-vector-tip');
-  tip.style.fill = success ? '#f2c94c' : '#e0637a';
+  tip.style.fill = success ? 'var(--gem)' : 'var(--danger)';
   tip.setAttribute('r', 8);
   document.getElementById('plot-mask').setAttribute('r', PLOT_OUTER_R);
   document.getElementById('plot-unit-outline').setAttribute('r', PLOT_OUTER_R);
@@ -935,10 +931,10 @@ function renderClassicalDeck(){
       outer.classList.toggle('revealed', idx === c.lastRevealedIndex);
       if(card.type === 'gem'){
         face.className = 'c-card-face gem-face';
-        face.innerHTML = svgDiamond('#f2c94c', 22);
+        face.innerHTML = svgDiamond('var(--gem)', 22);
       } else {
         face.className = 'c-card-face blank-face fail-face';
-        face.innerHTML = svgX('#8b93a7', 16);
+        face.innerHTML = svgX('var(--ink-dim)', 16);
       }
     } else {
       face.className = 'c-card-face';
@@ -1027,10 +1023,10 @@ function setMeasureBoxState(state){
     inner.classList.add('opening');
   } else if(state === 'success'){
     inner.classList.add('success');
-    icon.innerHTML = svgDiamond('#f2c94c', 26);
+    icon.innerHTML = svgDiamond('var(--gem)', 26);
   } else if(state === 'fail'){
     inner.classList.add('fail');
-    icon.innerHTML = svgX('#e0637a', 28);
+    icon.innerHTML = svgX('var(--danger)', 28);
   }
 }
 function resetMeasureBox(){ setMeasureBoxState('closed'); }
@@ -1325,6 +1321,24 @@ function wireGameScreen(){
   document.getElementById('new-game-btn').addEventListener('click', ()=> showScreen('setup-screen'));
   document.getElementById('mute-btn').addEventListener('click', ()=> setSoundEnabled(!soundOn));
 }
+
+// Light/dark theme. Purely visual (CSS variables keyed off
+// <html data-theme="…">, see style.css), so it can flip at any time,
+// including mid-game. Both switches (setup screen and game header) stay in
+// sync; "on" means dark. Nothing is saved: a reload returns to dark.
+let theme = 'dark';
+function setTheme(t){
+  theme = t;
+  document.documentElement.dataset.theme = t;
+  ['theme-toggle', 'theme-toggle-header'].forEach(id => {
+    const sw = document.getElementById(id);
+    if (!sw) return;
+    sw.classList.toggle('active', t === 'dark');
+    sw.setAttribute('aria-checked', String(t === 'dark'));
+  });
+}
+['theme-toggle', 'theme-toggle-header'].forEach(id =>
+  document.getElementById(id).addEventListener('click', () => setTheme(theme === 'dark' ? 'light' : 'dark')));
 
 wireSetupScreen();
 wireGameScreen();
