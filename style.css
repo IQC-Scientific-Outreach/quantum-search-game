@@ -54,7 +54,7 @@
 
   /* Text colors that sit on top of accent-colored fills. */
   --on-accent: #fdf1f2;   /* on active pills / switch knobs (same in both themes) */
-  --on-primary: #04141c;  /* on the red-to-pink primary button and the result-button hovers */
+  --on-primary: #04141c;  /* on the result-button hovers (and the light theme's primary button) */
   --on-wash: #04141c;     /* default text on the pale probability-gradient tiles */
 
   /* Tinted panel fills that only make sense per theme. */
@@ -74,6 +74,18 @@
   --danger-text: var(--danger);
   --quantum-tag-text: var(--quantum-bright);
   --classical-tag-text: var(--classical-bright);
+  /* --quantum / --classical as small text (event names in the log, the
+     header's win/lose result). The accents themselves are only ~2.3-2.6:1
+     on the dark page, so dark swaps in lighter shades of the same hues. */
+  --quantum-text: var(--quantum-bright);
+  --classical-deep-text: #3a9cc4;
+
+  /* The primary ("Begin search") button. Dark runs deep red into the base
+     red under light text: the light theme's red-to-pink ramp put dark text
+     on dark red at the left end (about 2.2:1). */
+  --primary-a: var(--quantum-deep);
+  --primary-b: var(--quantum);
+  --primary-text: var(--on-accent);
 
   --radius: 10px;
   font-size: 16px;
@@ -131,6 +143,12 @@
   --danger-text: #962f2f;
   --quantum-tag-text: var(--quantum-deep);
   --classical-tag-text: var(--classical-deep);
+  --quantum-text: var(--quantum);
+  --classical-deep-text: var(--classical);
+
+  --primary-a: var(--quantum);
+  --primary-b: var(--quantum-bright);
+  --primary-text: var(--on-primary);
 }
 
 /* Each theme shows the logo made for its background: white wordmark in dark
@@ -330,8 +348,8 @@ h1{
   padding: 15px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, var(--quantum), var(--quantum-bright));
-  color: var(--on-primary);
+  background: linear-gradient(135deg, var(--primary-a), var(--primary-b));
+  color: var(--primary-text);
   font-family:'Barlow Condensed', sans-serif;
   font-weight: 700;
   font-size: 16px;
@@ -377,7 +395,7 @@ h1{
   max-width: 170px;
   flex-shrink: 0;
 }
-.game-title{ font-weight:700; font-size:19px; }
+.game-title{ font-weight:700; font-size:19px; margin:0; letter-spacing:normal; }
 .game-meta{
   font-family:Verdana, Geneva, sans-serif;
   font-size: 13px; color: var(--ink-dim);
@@ -441,7 +459,7 @@ h1{
 .quadrant-head{
   font-family:Verdana, Geneva, sans-serif;
   font-size: 11px; text-transform:uppercase; letter-spacing:.08em;
-  color: var(--ink-dim); margin-bottom: 10px;
+  color: var(--ink-dim); margin: 0 0 10px 0; font-weight: normal;
 }
 
 .panel-head{
@@ -596,7 +614,9 @@ h1{
   border-radius: 8px;
   display:flex; align-items:center; justify-content:center;
   font-family:Verdana, Geneva, sans-serif;
-  font-weight:600; font-size: 13.5px;
+  /* 19px bold is WCAG "large text", so 3:1 is enough against the
+     probability gradient (see textColorFor() in app.js). */
+  font-weight:700; font-size: 19px;
   border: 1.5px solid var(--hairline);
   background: var(--quantum-wash);
   color: var(--on-wash);
@@ -639,11 +659,15 @@ h1{
   text-align:left;
   transition: all .12s ease;
 }
-.action-btn:hover:not(:disabled){ border-color: var(--quantum-bright); background: var(--bg-panel); }
-.action-btn:disabled{ opacity: 0.45; cursor:not-allowed; }
+.action-btn:hover:not([aria-disabled="true"]){ border-color: var(--quantum-bright); background: var(--bg-panel); }
+/* Inactive between turns. Not faded with opacity: the sub-text explains
+   why the button is unavailable (e.g. Cosmic Ray), so it has to stay
+   readable. A dashed outline and dimmed title mark the state instead. */
+.action-btn[aria-disabled="true"]{ cursor:not-allowed; background: transparent; border-style: dashed; }
+.action-btn[aria-disabled="true"] .action-title{ color: var(--ink-dim); }
 .action-title{ font-weight:600; font-size:14px; color: var(--ink); }
 .action-sub{ font-size:11.5px; color: var(--ink-dim); font-family:Verdana, Geneva, sans-serif; }
-.measure-btn:hover:not(:disabled){ border-color: var(--gem); }
+.measure-btn:hover:not([aria-disabled="true"]){ border-color: var(--gem); }
 .measure-btn.forced{
   border-color: var(--gem);
   background: rgba(var(--gem-rgb), 0.14);
@@ -745,7 +769,7 @@ h1{
 .log-entry{ color: var(--ink-dim); padding: 2px 0; }
 .log-entry .who-q{ color: var(--quantum-bright); }
 .log-entry .who-c{ color: var(--classical-bright); }
-.log-entry .who-e{ color: var(--gem); }
+.log-entry .who-e{ color: var(--gem-text); }
 
 .header-log-entry{
   font-size: 13px;
@@ -764,9 +788,9 @@ h1{
 }
 .header-log-entry.who-q{ color: var(--quantum-bright); }
 .header-log-entry.who-c{ color: var(--classical-bright); }
-.header-log-entry.who-e{ color: var(--gem); }
-.header-log-entry.result-win{ color: var(--quantum); font-weight: 800; }
-.header-log-entry.result-lose{ color: var(--classical); font-weight: 800; }
+.header-log-entry.who-e{ color: var(--gem-text); }
+.header-log-entry.result-win{ color: var(--quantum-text); font-weight: 800; }
+.header-log-entry.result-lose{ color: var(--classical-deep-text); font-weight: 800; }
 
 .event-card{
   border: 1px solid var(--hairline);
@@ -834,7 +858,16 @@ h1{
 }
 
 /* Focus visibility */
-button:focus-visible, input:focus-visible{
+button:focus-visible, input:focus-visible, .log-list:focus-visible{
   outline: 2px solid var(--quantum-bright);
   outline-offset: 2px;
 }
+
+/* Read by screen readers, not shown (the #sr-announcer live region). */
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+/* Headings that only receive focus programmatically (see showScreen()). */
+h1[tabindex="-1"]:focus{ outline: none; }

@@ -174,6 +174,18 @@ const EVENT_COLORS = {
   EXTRA_RAM: 'var(--classical-bright)',// light blue
   NEUTRAL: 'var(--ink-dim)'            // gray
 };
+// The same hues for the event name written as text in the log. Some of the
+// accents above are too dark (dark theme) or too light (light theme) to
+// reach 4.5:1 as small text on the page background, so each points at a
+// --*-text variable that style.css tunes per theme.
+const EVENT_TEXT_COLORS = {
+  DECOHERENCE: 'var(--quantum-text)',
+  COSMIC_RAY: 'var(--gem-text)',
+  BLUE_SCREEN: 'var(--classical-deep-text)',
+  QEC: 'var(--qec-text)',
+  EXTRA_RAM: 'var(--classical-bright)',
+  NEUTRAL: 'var(--ink-dim)'
+};
 
 /* ---------- Utilities ---------- */
 
@@ -268,6 +280,21 @@ function log(who, text){
   game.log.push({who, text});
   renderLog();
   updateHeaderLogEntry(who, text);
+  announce(text);
+}
+
+// Reads `text` out to screen-reader users via the visually hidden
+// #sr-announcer live region. Each message is appended as its own node
+// (rather than replacing the region's text) so quick bursts, like
+// several Extra RAM flips in a row, are all read instead of only the
+// last; old nodes are trimmed, and removals aren't announced. `text`
+// may hold the same simple inline HTML as log().
+function announce(text){
+  const region = document.getElementById('sr-announcer');
+  const line = document.createElement('div');
+  line.innerHTML = text;
+  region.appendChild(line);
+  while(region.childNodes.length > 6) region.removeChild(region.firstChild);
 }
 
 // Mirrors the latest log entry into the top bar, beside the game-mode
@@ -344,6 +371,7 @@ function finishClassicalTurn(){
   resetMeasureBox();
   game.phase = 'quantum';
   updateReadouts();
+  announce(`Your turn. ${document.getElementById('measure-sub').textContent}.`);
 }
 
 /* ---------- Turn logic: quantum player ---------- */
@@ -643,7 +671,7 @@ function runEvent(){
   }
 
   const color = EVENT_COLORS[card];
-  log('e', `<span style="color:${color}">${title}</span> — ${desc}`);
+  log('e', `<span style="color:${EVENT_TEXT_COLORS[card]}">${title}</span> — ${desc}`);
   renderEventCard(title, desc, color);
   render();
   game.phase = 'classical';
@@ -689,8 +717,11 @@ function endGame(winner){
     <div class="event-card-desc">${desc}</div>
     <button id="play-again-btn" class="primary-btn game-over-btn">Start new game</button>
   `;
-  document.getElementById('play-again-btn').addEventListener('click', ()=> showScreen('setup-screen'));
+  const playAgainBtn = document.getElementById('play-again-btn');
+  playAgainBtn.addEventListener('click', ()=> showScreen('setup-screen'));
   document.querySelector('#event-panel .quadrant-head').textContent = 'Result';
+  announce(`${winner === 'quantum' ? 'You win!' : 'You lose.'} ${desc}`);
+  playAgainBtn.focus(); // Measure, where focus was, is now inert
 
   const headerEntry = document.getElementById('header-log-entry');
   headerEntry.textContent = title;
@@ -718,10 +749,14 @@ function render(){
 // Fills in each player's gem tally as a row of filled/empty gem icons.
 function renderGems(){
   const q = game.quantum, c = game.classical, target = game.config.gemTarget;
-  document.getElementById('quantum-gems').innerHTML =
-    Array.from({length: target}).map((_,i)=>`<span class="gem-slot ${i<q.points?'filled':''}">💎</span>`).join('');
-  document.getElementById('classical-gems').innerHTML =
-    Array.from({length: target}).map((_,i)=>`<span class="gem-slot ${i<c.points?'filled':''}">💎</span>`).join('');
+  // Filled vs. empty is only shown by opacity, so each tally is exposed
+  // to screen readers as one image with the score spelled out.
+  [['quantum-gems', q.points], ['classical-gems', c.points]].forEach(([id, points])=>{
+    const el = document.getElementById(id);
+    el.innerHTML = Array.from({length: target}).map((_,i)=>`<span class="gem-slot ${i<points?'filled':''}">💎</span>`).join('');
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', `${points} of ${target} gems`);
+  });
 }
 
 // Washed-out pink at low probability -> solid quantum red at high
@@ -736,8 +771,11 @@ function probToColor(p){
 // the probability-gradient background is at that point. The gradient's
 // endpoints are nearly identical in both themes, so the same two colors
 // work for both.
+// The 0.68 switch point is where the two text colors' contrast against
+// the gradient cross over (about 4.2:1 each in both themes); tile labels
+// are sized as large text in style.css so that clears WCAG's 3:1.
 function textColorFor(p){
-  return p > 0.55 ? 'var(--on-accent)' : 'var(--on-wash)';
+  return p > 0.68 ? 'var(--on-accent)' : 'var(--on-wash)';
 }
 
 // Draws the Board Game tile row: current position (arrow + glow),
@@ -751,6 +789,7 @@ function renderQuantumBoard(){
   game.board.forEach((tile, idx)=>{
     const div = document.createElement('div');
     div.className = 'q-tile';
+    div.setAttribute('role', 'listitem');
     if(idx === q.tileIndex) div.classList.add('current');
     if(idx > q.maxReachable) div.classList.add('blocked');
     if(tile.final) div.classList.add('final');
@@ -767,6 +806,13 @@ function renderQuantumBoard(){
         div.textContent = game.config.probMode === 'rounded' ? tile.label : `${pct}%`;
       }
     }
+    // Position (gold border + arrow), covered (hatching) and the final
+    // tile are all visual-only, so spell them out for screen readers.
+    let name = tile.final ? 'Final tile, guaranteed gem' : `Tile ${idx+1}`;
+    if(idx > q.maxReachable) name += ', covered by Decoherence';
+    else if(!tile.final && game.config.showProb) name += `, ${div.textContent} chance`;
+    if(idx === q.tileIndex) name += ', you are here';
+    div.setAttribute('aria-label', name);
     wrap.appendChild(div);
   });
 }
@@ -871,6 +917,13 @@ function renderQuantumState(){
   const pctEl = document.getElementById('state-pct');
   pctEl.style.color = textColorFor(p);
   pctEl.textContent = game.config.showProb ? `${Math.round(p*100)}%` : '';
+  if(game.config.showProb){
+    square.setAttribute('role', 'img');
+    square.setAttribute('aria-label', `Chance of finding the gem: ${Math.round(p*100)}%`);
+    square.removeAttribute('aria-hidden');
+  } else {
+    square.setAttribute('aria-hidden', 'true'); // colour only, nothing to read
+  }
 
   document.getElementById('state-iteration').textContent = `Iteration ${q.k}`;
 
@@ -893,6 +946,11 @@ function renderQuantumState(){
   document.getElementById('plot-reference-group').setAttribute('transform', `rotate(${svgAngleDeg(groverTheta(N))})`);
 
   document.getElementById('plot-vector-group').setAttribute('transform', `rotate(${nearestEquivalentDeg(svgAngleDeg(phi))}) scale(${radius})`);
+  const angleDeg = Math.round(((phi * 180 / Math.PI) % 360 + 360) % 360);
+  document.getElementById('state-plot').setAttribute('aria-label',
+    `State vector at ${angleDeg}° from the X axis (the gem axis is at 90°)` +
+    (radius < 1 ? `, circle shrunk to ${Math.round(radius*100)}% radius` : '') +
+    (q.qecCharges > 0 ? ', error correction shield armed' : ''));
   const tip = document.getElementById('plot-vector-tip');
   tip.style.fill = '';
   tip.setAttribute('r', 6);
@@ -921,6 +979,9 @@ function renderClassicalDeck(){
   const c = game.classical;
   const wrap = document.getElementById('classical-deck');
   wrap.setAttribute('data-size', game.config.deckSize);
+  wrap.setAttribute('role', 'img');
+  wrap.setAttribute('aria-label', `Opponent's deck: ${c.revealed} of ${c.deck.length} cards flipped` +
+    (c.pendingReshuffle ? ', gem found' : ''));
   wrap.innerHTML = '';
   c.deck.forEach((card, idx)=>{
     const outer = document.createElement('div');
@@ -1016,6 +1077,8 @@ function setMeasureBoxState(state){
   const inner = document.getElementById('measure-box-inner');
   const icon = document.getElementById('measure-icon');
   inner.classList.remove('opening','success','fail');
+  document.getElementById('measure-box').setAttribute('aria-label',
+    { closed: 'Not measured yet', opening: 'Measuring', success: 'Measured: gem found', fail: 'Measured: no gem' }[state]);
   if(state === 'closed'){
     icon.textContent = '?';
     icon.innerHTML = '?';
@@ -1050,8 +1113,12 @@ function updateReadouts(){
       ? 'Gem found — deck reshuffles at the start of the next turn.'
       : `Deck has ${c.deck.length - c.revealed} card(s) left before a reshuffle.`;
 
+  // aria-disabled rather than the disabled property: a disabled button
+  // drops keyboard focus to <body>, so a keyboard player would have to
+  // Tab back to Advance/Measure after every single turn. The click
+  // handlers already ignore presses outside the player's turn.
   const myTurn = isQuantumTurn();
-  measureBtn.disabled = !myTurn;
+  measureBtn.setAttribute('aria-disabled', String(!myTurn));
   measureBtn.classList.toggle('forced', myTurn && q.forcedMeasure);
 
   if(isStateMode()) updateReadoutsState(myTurn); else updateReadoutsTiles(myTurn);
@@ -1068,18 +1135,18 @@ function updateReadoutsTiles(myTurn){
   const advanceSub = advanceBtn.querySelector('.action-sub');
 
   if(!myTurn){
-    advanceBtn.disabled = true;
+    advanceBtn.setAttribute('aria-disabled', 'true');
     advanceSub.textContent = 'Move one tile right';
   } else if(q.forcedMeasure){
-    advanceBtn.disabled = true;
+    advanceBtn.setAttribute('aria-disabled', 'true');
     advanceSub.textContent = 'Unavailable — Cosmic Ray forces a measurement';
   } else if(!canAdvance()){
-    advanceBtn.disabled = true;
+    advanceBtn.setAttribute('aria-disabled', 'true');
     advanceSub.textContent = game.board[q.tileIndex].final
       ? 'No further tiles — measure to collect'
       : 'Unavailable — next tile is covered by Decoherence';
   } else {
-    advanceBtn.disabled = false;
+    advanceBtn.setAttribute('aria-disabled', 'false');
     advanceSub.textContent = 'Move one tile right';
   }
 
@@ -1120,13 +1187,13 @@ function updateReadoutsState(myTurn){
   const overshooting = q.k > 0 && groverProbability(N, q.k) < groverProbability(N, q.k - 1);
 
   if(!myTurn){
-    advanceBtn.disabled = true;
+    advanceBtn.setAttribute('aria-disabled', 'true');
     advanceSub.textContent = 'Rotate the state further';
   } else if(q.forcedMeasure){
-    advanceBtn.disabled = true;
+    advanceBtn.setAttribute('aria-disabled', 'true');
     advanceSub.textContent = 'Unavailable — Cosmic Ray forces a measurement';
   } else {
-    advanceBtn.disabled = false;
+    advanceBtn.setAttribute('aria-disabled', 'false');
     advanceSub.textContent = 'Rotate the state further';
   }
 
@@ -1155,6 +1222,9 @@ function updateReadoutsState(myTurn){
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  // The button that was pressed is now hidden, which would leave keyboard
+  // and screen-reader focus on <body>; start them at the new screen's title.
+  document.querySelector(`#${id} h1`).focus();
 }
 
 // Reads every setup-screen control into a single config object, passed
@@ -1215,6 +1285,15 @@ const DECOHERENCE_MODEL_DESCRIPTIONS = {
 // Board Style additionally toggles which of Probability Model /
 // Decoherence Model is relevant to show. The "Begin search" handler at
 // the bottom is the actual entry point into a new game.
+// Marks `pill` as the chosen option in its group, both visually (.active)
+// and for screen readers (aria-pressed).
+function selectPill(pill){
+  pill.parentElement.querySelectorAll('.pill').forEach(x=>{
+    x.classList.toggle('active', x === pill);
+    x.setAttribute('aria-pressed', String(x === pill));
+  });
+}
+
 function wireSetupScreen(){
   document.querySelectorAll('.step-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1227,14 +1306,12 @@ function wireSetupScreen(){
 
   document.querySelectorAll('#deck-size-group .pill').forEach(p=>{
     p.addEventListener('click', ()=>{
-      document.querySelectorAll('#deck-size-group .pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
+      selectPill(p);
     });
   });
   document.querySelectorAll('#board-style-group .pill').forEach(p=>{
     p.addEventListener('click', ()=>{
-      document.querySelectorAll('#board-style-group .pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
+      selectPill(p);
       const isState = p.dataset.value === 'state';
       document.getElementById('prob-mode-field').style.display = isState ? 'none' : '';
       document.getElementById('board-style-note').textContent = BOARD_STYLE_DESCRIPTIONS[p.dataset.value];
@@ -1243,21 +1320,18 @@ function wireSetupScreen(){
   });
   document.querySelectorAll('#prob-mode-group .pill').forEach(p=>{
     p.addEventListener('click', ()=>{
-      document.querySelectorAll('#prob-mode-group .pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
+      selectPill(p);
     });
   });
   document.querySelectorAll('#decoherence-model-group .pill').forEach(p=>{
     p.addEventListener('click', ()=>{
-      document.querySelectorAll('#decoherence-model-group .pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
+      selectPill(p);
       document.getElementById('decoherence-model-note').textContent = DECOHERENCE_MODEL_DESCRIPTIONS[p.dataset.value];
     });
   });
   document.querySelectorAll('#game-mode-group .pill').forEach(p=>{
     p.addEventListener('click', ()=>{
-      document.querySelectorAll('#game-mode-group .pill').forEach(x=>x.classList.remove('active'));
-      p.classList.add('active');
+      selectPill(p);
       document.getElementById('game-mode-note').textContent = GAME_MODE_DESCRIPTIONS[p.dataset.value];
     });
   });
