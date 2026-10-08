@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hadamard's Hoard — A Quantum Search Game</title>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -128,30 +128,30 @@
       <button id="start-btn" class="primary-btn">Begin search</button>
 
       <details class="rules-disclosure">
-        <summary>Your mission</summary>
-        <p>You've gained access to Hadamard's Hoard, a massive trove of both treasured gems and meaningless rocks. Unfortunately, your opponent has access to it too, and you'll have to race them to collect gems quickly. But without any way to separate them from the rocks besides checking them one-by-one, you might be here for a while.</p>
-        <p>Unlike your opponent, you have a quantum computer. Can you use Grover's algorithm to more efficiently find the precious gems?</p>
+        <summary>Game goals</summary>
+        <p>You and your opponent both must find gems hidden among collection of worthless cards. Your opponent plays as a classical computer and must search each element one at a time. You can use the rules of quantum computing to instead run a quantum search algorithm to find the precious gems. Can you find gems faster than your opponent while fighting decoherence and other sources of errors?</p>
       </details>
 
       <details class="rules-disclosure">
         <summary>Turn order</summary>
         <ol>
-          <li>Your <strong>opponent</strong> flips one card from its deck (more, if it holds Extra RAM). A gem card scores a point; the deck reshuffles at the start of its next turn.</li>
-          <li><strong>You</strong> either <em>advance the algorithm</em> (move one tile right) or <em>measure</em> (resolve the odds on your current tile). Measuring always returns the arrow to tile 1.</li>
-          <li>If events are on, a card flips and may affect either side — Decoherence blocks a tile, Cosmic Ray forces your next measurement, Extra RAM speeds up the opponent, Blue Screen resets its deck, Quantum Error Correction shields you from the next Decoherence.</li>
-          <li>First to the gem target wins.</li>
+          <li>Your <strong>opponent</strong> flips one card from their deck. A gem card scores a point and reshuffles the deck.</li>
+          <li><strong>You</strong> either <em>advance the algorithm</em> (increase your probability for the next turn) or <em>measure</em> (find a gem with the probability according to your position). Measuring always returns your quantum state back to the start.</li>
+          <li><strong>Draw an event</strong>: Decoherence blocks your progress, Cosmic Ray forces your next measurement, Extra RAM speeds up the opponent, Blue Screen resets their deck, Quantum Error Correction shields you from the next Decoherence.</li>
+          <li>First to collect the target number of gems wins.</li>
         </ol>
       </details>
 
       <details class="rules-disclosure">
         <summary>Player-versus-player version</summary>
-        <p>To download a play-at-home version, visit IQC's <a href="https://uwaterloo.ca/institute-for-quantum-computing/outreach/quantum-educators/teacher-resources" target="_blank" rel="noopener">teacher resources page</a>.</p>
+        <p>To download a printable play-at-home version, find Hadamard's Hoard on IQC's <a href="https://uwaterloo.ca/institute-for-quantum-computing/outreach/quantum-educators/teacher-resources" target="_blank" rel="noopener">teacher resources page</a>.</p>
       </details>
 
       <details class="rules-disclosure">
         <summary>Credits</summary>
-        <p>Game developed by the IQC Scientific Outreach team in 2025. Web version developed with the assistance of artificial intelligence.</p>
-        <p>Contact <a href="mailto:iqc-outreach@uwaterloo.ca">iqc-outreach@uwaterloo.ca</a> with any questions.</p>
+        <p>Hadamard's Hoard game developed in 2025 by the Scientific Outreach team at the Institute for Quantum Computing (IQC), University of Waterloo. Web version developed with the assistance of artificial intelligence.</p>
+	<p>Based on Grover's algorithm, see: Grover, Lov K. "A fast quantum mechanical algorithm for database search." Proceedings of the twenty-eighth annual ACM symposium on Theory of computing. 1996. </p>
+        <p>Contact <a href="mailto:iqc-outreach@uwaterloo.ca">iqc-outreach@uwaterloo.ca</a> with any questions or bug reports.</p>
       </details>
     </div>
   </section>
@@ -356,7 +356,7 @@
 
 </div>
 
-<script src="audio.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="audio.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
