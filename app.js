@@ -268,6 +268,39 @@ function log(who, text){
   game.log.push({who, text});
   renderLog();
   updateHeaderLogEntry(who, text);
+  // "You …"/"Opponent …" lines already name who acted; events need the label.
+  announce((who === 'e' ? 'Event: ' : '') + htmlToText(text));
+}
+
+// Queues a line for screen readers via the hidden #sr-announcer live
+// region. Each line is appended as its own node so only the new text is
+// read (not the whole region again); only the last few are kept.
+function announce(text){
+  const region = document.getElementById('sr-announcer');
+  const line = document.createElement('p');
+  line.textContent = text;
+  region.appendChild(line);
+  while(region.children.length > 5) region.firstElementChild.remove();
+}
+
+// Log/readout text may carry inline HTML (colored spans); screen readers
+// just need the words.
+function htmlToText(html){
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent;
+}
+
+// Tells screen-reader users it's their move, with the same guidance the
+// readout and button sub-text give sighted players.
+function announceQuantumTurn(){
+  const parts = ['Your turn.', document.getElementById('quantum-readout').textContent];
+  const advanceBtn = document.getElementById('advance-btn');
+  if(advanceBtn.disabled){
+    parts.push(`Run the algorithm: ${advanceBtn.querySelector('.action-sub').textContent}.`);
+  }
+  parts.push(`Measure: ${document.getElementById('measure-sub').textContent}.`);
+  announce(parts.join(' '));
 }
 
 // Mirrors the latest log entry into the top bar, beside the game-mode
@@ -344,6 +377,7 @@ function finishClassicalTurn(){
   resetMeasureBox();
   game.phase = 'quantum';
   updateReadouts();
+  announceQuantumTurn();
 }
 
 /* ---------- Turn logic: quantum player ---------- */
@@ -691,6 +725,7 @@ function endGame(winner){
   `;
   document.getElementById('play-again-btn').addEventListener('click', ()=> showScreen('setup-screen'));
   document.querySelector('#event-panel .quadrant-head').textContent = 'Result';
+  announce(`${winner === 'quantum' ? 'You win' : 'You lose'}. ${desc}`);
 
   const headerEntry = document.getElementById('header-log-entry');
   headerEntry.textContent = title;
@@ -722,6 +757,9 @@ function renderGems(){
     Array.from({length: target}).map((_,i)=>`<span class="gem-slot ${i<q.points?'filled':''}">💎</span>`).join('');
   document.getElementById('classical-gems').innerHTML =
     Array.from({length: target}).map((_,i)=>`<span class="gem-slot ${i<c.points?'filled':''}">💎</span>`).join('');
+  // The 💎 row is decorative to a screen reader; give it a plain count instead.
+  document.getElementById('quantum-gems').setAttribute('aria-label', `You: ${q.points} of ${target} gems`);
+  document.getElementById('classical-gems').setAttribute('aria-label', `Opponent: ${c.points} of ${target} gems`);
 }
 
 // Washed-out pink at low probability -> solid quantum red at high
@@ -1289,6 +1327,7 @@ function wireSetupScreen(){
     document.getElementById('header-log-dot').style.display = 'none';
     document.getElementById('new-game-btn').className = 'ghost-btn';
     resetEventPanel();
+    document.getElementById('sr-announcer').innerHTML = '';
     newGame(config);
     showScreen('game-screen');
     game.phase = 'classical';
