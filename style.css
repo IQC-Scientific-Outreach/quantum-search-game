@@ -828,6 +828,90 @@ h1{
   .measure-box{ width:auto; }
 }
 
+/* Phones: compact single column sized so both players fit on one screen.
+   The opponent's deck goes first and the quantum panel (with the action
+   buttons) sits underneath it, closest to the thumb; log and event panels
+   follow below the fold. Everything here is phone-only — the desktop
+   quadrant layout above is untouched. */
+@media (max-width: 640px){
+  /* Header becomes two rows: logo + controls, then the meta/log line. The
+     title text is dropped here (it's on the setup screen) — there isn't
+     room for it beside the logo and controls on a ~360px screen. */
+  .game-header{ padding: 8px 12px; gap: 6px 10px; }
+  .header-logo{ height: 16px; max-width: 120px; }
+  .game-title{ display: none; }
+  .theme-row{ margin-right: 0; }
+  .theme-icon{ font-size: 13px; }
+  .icon-btn{ width: 30px; height: 30px; font-size: 14px; }
+  .ghost-btn{ padding: 5px 10px; }
+  /* Meta line drops to its own full-width row; the latest-log text takes
+     whatever room is left and truncates. */
+  .game-meta{
+    order: 10; width: 100%;
+    display: flex; align-items: baseline; min-width: 0;
+    font-size: 11.5px; white-space: nowrap;
+  }
+  .header-log-entry{ font-size: 11.5px; max-width: none; flex: 1; min-width: 0; }
+
+  .classical-panel{ order: -1; }
+  .player-panel{ min-height: 0; padding: 10px 14px 12px; }
+  .quadrant-box{ min-height: 0; padding: 10px 14px 14px; }
+
+  .panel-head{ margin-bottom: 4px; }
+  .panel-head h2{ font-size: 16px; gap: 8px; }
+  .role-tag{ font-size: 9.5px; padding: 2px 6px; }
+  .gem-tally{ font-size: 15px; gap: 3px; }
+  .turn-readout{ font-size: 12px; line-height: 1.4; margin-bottom: 8px; }
+
+  /* Desktop reserves room for every chip (hidden chips keep their space),
+     which on a narrow screen wraps into several empty rows. Here only the
+     chips app.js has switched on (inline visibility:visible) take space,
+     with one row still reserved so a single chip doesn't shift the buttons. */
+  .status-slot{ min-height: 30px; margin-bottom: 8px; gap: 6px; }
+  .status-chip{ font-size: 11px; padding: 6px 9px; }
+  .status-chip:not([style*="visible"]){ display: none; }
+
+  /* Quantum tiles share one row (up to 8 at N = 100) instead of wrapping. */
+  .quantum-board{ flex-wrap: nowrap; gap: 5px; padding-top: 16px; margin-bottom: 10px; }
+  .q-tile{
+    flex: 1 1 0; min-width: 0; max-width: 64px;
+    width: auto; height: auto; aspect-ratio: 1;
+    font-size: 10.5px;
+  }
+  .q-tile.final svg{ width: 22px; height: 22px; }
+  .q-tile.current::before{ top: -16px; font-size: 13px; }
+  .q-tile.blocked::after{ font-size: 15px; }
+
+  .quantum-state{ gap: 6px; margin-bottom: 8px; padding: 0; }
+  .state-boxes{ gap: 12px; }
+  .state-square, .state-plot-box{ width: 112px; height: 112px; }
+  .state-pct{ font-size: 23px; }
+  .state-iteration{ font-size: 11.5px; }
+
+  /* Keep Measure and its result box side by side (the tablet rule above stacks them). */
+  .action-row{ gap: 8px; }
+  .action-btn{ padding: 9px 10px; gap: 2px; }
+  .action-title{ font-size: 13.5px; }
+  .action-sub{ font-size: 10.5px; }
+  .measure-group{ flex-direction: row; gap: 6px; }
+  .measure-box{ width: 42px; }
+  .measure-box-inner{ width: 40px; height: 40px; }
+  .measure-icon{ font-size: 18px; }
+  .measure-box-inner svg{ width: 22px; height: 22px; }
+
+  /* Wider, shallower deck grids so even N = 100 is only five rows tall. */
+  .classical-deck{ margin-bottom: 8px; }
+  .classical-deck[data-size="4"]{ max-width: 200px; }
+  .classical-deck[data-size="12"]{ max-width: none; gap: 4px; }
+  .classical-deck[data-size="30"]{ grid-template-columns: repeat(15, minmax(0,1fr)); max-width: none; gap: 4px; }
+  .classical-deck[data-size="100"]{ grid-template-columns: repeat(20, minmax(0,1fr)); max-width: none; gap: 3px; }
+  .c-card, .c-card-face{ border-radius: 3px; }
+  .classical-deck[data-size="100"] .c-card-face{ font-size: 7px; }
+
+  .log-list{ max-height: 160px; font-size: 11.5px; }
+  .event-card{ padding: 10px 12px; }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce){
   *{ transition: none !important; animation: none !important; }
