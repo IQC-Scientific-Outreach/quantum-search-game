@@ -839,6 +839,8 @@ h1{
      room for it beside the logo and controls on a ~360px screen. */
   .game-header{ padding: 8px 12px; gap: 6px 10px; }
   .header-logo{ height: 16px; max-width: 120px; }
+  /* Pad the logo link so its tap area stays >= 24px tall (WCAG 2.5.8). */
+  .game-header .logo-link{ padding: 4px 0; }
   .game-title{ display: none; }
   .theme-row{ margin-right: 0; }
   .theme-icon{ font-size: 13px; }
@@ -859,7 +861,7 @@ h1{
 
   .panel-head{ margin-bottom: 4px; }
   .panel-head h2{ font-size: 16px; gap: 8px; }
-  .role-tag{ font-size: 9.5px; padding: 2px 6px; }
+  .role-tag{ font-size: 10.5px; padding: 2px 6px; }
   .gem-tally{ font-size: 15px; gap: 3px; }
   .turn-readout{ font-size: 12px; line-height: 1.4; margin-bottom: 8px; }
 
@@ -892,7 +894,7 @@ h1{
   .action-row{ gap: 8px; }
   .action-btn{ padding: 9px 10px; gap: 2px; }
   .action-title{ font-size: 13.5px; }
-  .action-sub{ font-size: 10.5px; }
+  .action-sub{ font-size: 11px; }
   .measure-group{ flex-direction: row; gap: 6px; }
   .measure-box{ width: 42px; }
   .measure-box-inner{ width: 40px; height: 40px; }
@@ -918,7 +920,7 @@ h1{
 }
 
 /* Focus visibility */
-button:focus-visible, input:focus-visible{
+button:focus-visible, input:focus-visible, .log-list:focus-visible{
   outline: 2px solid var(--quantum-bright);
   outline-offset: 2px;
 }
